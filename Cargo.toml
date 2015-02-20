@@ -1,0 +1,5 @@
+[package]
+
+name = "sysly"
+version = "0.0.1"
+authors = ["softprops <d.tangren@gmail.com>"]
