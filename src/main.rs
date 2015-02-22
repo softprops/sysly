@@ -127,3 +127,15 @@ fn main() {
     Ok(_) => println!("sent")
   };
 }
+
+#[cfg(test)]
+mod tests {
+  use super::{Syslog, Facility, Severity};
+  use time;
+  #[test]
+  fn test_syslog_line() {
+    let ts = time::now();
+    assert_eq!(Syslog::line(Facility::LOCAL0, Severity::INFO, ts, "yo"),
+               format!("<134> {} yo", ts.rfc3339()));
+  }
+}
