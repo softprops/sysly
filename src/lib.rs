@@ -92,6 +92,11 @@ impl Syslog {
       }
   }
 
+  /// Same as udp with providing local loopback address with the standard syslog port
+  pub fn localudp() -> Syslog {
+    Syslog::udp(SocketAddr { ip: Ipv4Addr(127,0,0,1), port: 514 })
+  }
+
   /// Factory for a Syslog appender that writes
   /// to a host-local Syslog daemon listening on a unix socket domain
   /// hosted at the given Path
