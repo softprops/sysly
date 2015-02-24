@@ -13,6 +13,8 @@ use std::old_io::net::pipe::UnixStream;
 /// A type alias for `Result<(), IoError>`, the result of writing a log message
 pub type Result = result::Result<(), IoError>;
 
+static NIL: &'static str = "-";
+
 /// Syslog Facilites as defined by [rfc5424](https://tools.ietf.org/html/rfc5424#page-10)
 #[derive(Copy,Clone)]
 pub enum Facility {
@@ -70,8 +72,10 @@ impl Transport for UnixStream {
 pub struct Syslog {
   /// A Syslog facility to target when logging
   facility: Facility,
-  /// An optional tag append to Syslog messages
-  tag: Option<String>,
+  host: Option<String>,
+  /// An optional tag append to Syslog messages as defined by 
+  /// [rfc5424](https://tools.ietf.org/html/rfc5424#section-6.2.5)
+  tag: Option<String>,  
   transport: Box<Transport>
 }
 
@@ -87,6 +91,7 @@ impl Syslog {
       let tup = (socket, host);
       Syslog {
         facility: Facility::USER,
+        host: None,
         tag: None,
         transport: Box::new(tup)
       }
@@ -108,8 +113,30 @@ impl Syslog {
       };
     Syslog {
       facility: Facility::USER,
+      host: None,
       tag: None,
       transport: Box::new(stream)
+    }
+  }
+  /// Returns a new Syslog appender configured to append with
+  /// the provided Facility
+  pub fn facility(self, facility: Facility) -> Syslog {
+    Syslog {
+      facility: facility,
+      host: None,
+      tag: self.tag,
+      transport: self.transport
+    }
+  }
+
+  /// Returns a new Syslog appender configured to append with
+  /// the provided host addr
+  pub fn host(self, local: &str) -> Syslog {
+    Syslog {
+      facility: self.facility,
+      host: Some(local.to_string()),
+      tag: self.tag,
+      transport: self.transport
     }
   }
 
@@ -118,17 +145,8 @@ impl Syslog {
   pub fn tag(self, tag: &str) -> Syslog {
     Syslog {
       facility: self.facility,
+      host: None,
       tag: Some(tag.to_string()),
-      transport: self.transport
-    }
-  }
-
-  /// Returns a new Syslog appender configured to append with
-  /// the provided Facility
-  pub fn facility(self, facility: Facility) -> Syslog {
-    Syslog {
-      facility: facility,
-      tag: self.tag,
       transport: self.transport
     }
   }
@@ -166,12 +184,15 @@ impl Syslog {
   }
 
   fn log(&mut self, severity: Severity,  msg: &str) -> Result {
-    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), msg);
+    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), self.host.clone(), self.tag.clone(), msg);
     self.transport.send(&formatted)
   }
 
-  fn line(facility: Facility, severity: Severity, timestamp: Tm, msg: &str) -> String {
-    format!("<{:?}> {} {}", Syslog::priority(facility, severity), timestamp.rfc3339(), msg)
+  fn line(facility: Facility, severity: Severity, timestamp: Tm, host: Option<String>, tag: Option<String>, msg: &str) -> String {
+    format!(
+      "<{:?}> {} {} {} {}",
+        Syslog::priority(facility, severity), timestamp.rfc3339(),
+        host.unwrap_or(NIL.to_string()), tag.unwrap_or(NIL.to_string()), msg)
   }
 
   // computes the priority of a message based on a facility and severity
@@ -182,12 +203,19 @@ impl Syslog {
 
 #[cfg(test)]
 mod tests {
-  use super::{Syslog, Facility, Severity};
+  use super::{Syslog, Facility, NIL, Severity};
   use time;
   #[test]
   fn test_syslog_line() {
     let ts = time::now();
-    assert_eq!(Syslog::line(Facility::LOCAL0, Severity::INFO, ts, "yo"),
-               format!("<134> {} yo", ts.rfc3339()));
+    let host = "foo.local";
+    let app = "sysly";
+    assert_eq!(Syslog::line(
+      Facility::LOCAL0, Severity::INFO, ts, Some(host.to_string()), Some(app.to_string()), "yo"),
+      format!("<134> {} {} {} yo", ts.rfc3339(), host, app));
+
+    assert_eq!(Syslog::line(
+      Facility::LOCAL0, Severity::INFO, ts, None, Some(app.to_string()), "yo"),
+      format!("<134> {} {} {} yo", ts.rfc3339(), NIL, app));
   }
 }
