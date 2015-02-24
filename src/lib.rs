@@ -206,14 +206,26 @@ mod tests {
   use super::{Syslog, Facility, NIL, Severity};
   use time;
   #[test]
-  fn test_syslog_line() {
+  fn test_syslog_line_defaults() {
+    let ts = time::now();
+    assert_eq!(Syslog::line(
+      Facility::LOCAL0, Severity::INFO, ts, None, None, "yo"),
+      format!("<134> {} {} {} yo", ts.rfc3339(), NIL, NIL));
+  }
+
+  #[test]
+  fn test_syslog_line_host() {
     let ts = time::now();
     let host = "foo.local";
-    let app = "sysly";
     assert_eq!(Syslog::line(
-      Facility::LOCAL0, Severity::INFO, ts, Some(host.to_string()), Some(app.to_string()), "yo"),
-      format!("<134> {} {} {} yo", ts.rfc3339(), host, app));
+      Facility::LOCAL0, Severity::INFO, ts, Some(host.to_string()), None, "yo"),
+      format!("<134> {} {} {} yo", ts.rfc3339(), host, NIL));
+  }
 
+  #[test]
+  fn test_syslog_line_tag() {
+    let ts = time::now();
+    let app = "sysly";
     assert_eq!(Syslog::line(
       Facility::LOCAL0, Severity::INFO, ts, None, Some(app.to_string()), "yo"),
       format!("<134> {} {} {} yo", ts.rfc3339(), NIL, app));
