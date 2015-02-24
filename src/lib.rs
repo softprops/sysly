@@ -10,10 +10,10 @@ use std::result;
 use time::Tm;
 use std::old_io::net::pipe::UnixStream;
 
-// https://tools.ietf.org/html/rfc5424#section-6.2.1
-
+/// A type alias for `Result<(), IoError>`, the result of writing a log message
 pub type Result = result::Result<(), IoError>;
 
+/// Syslog Facilites as defined by [rfc5424](https://tools.ietf.org/html/rfc5424#page-10)
 #[derive(Copy,Clone)]
 pub enum Facility {
   KERN     = 0,
@@ -38,6 +38,7 @@ pub enum Facility {
   LOCAL7   = 23 << 3
 }
 
+/// Syslog Severity as defined by [rfc5424](https://tools.ietf.org/html/rfc5424#page-11)
 pub enum Severity {
   EMERGENCY,
   ALERT,
@@ -65,14 +66,18 @@ impl Transport for UnixStream {
   }
 }
 
-// a rust interface for syslog
+/// A rust interface for Syslog, a standard unix system logging service
 pub struct Syslog {
+  /// A Syslog facility to target when logging
   facility: Facility,
+  /// An optional tag append to Syslog messages
   tag: Option<String>,
   transport: Box<Transport>
 }
 
 impl Syslog {
+   /// Factory for a Syslog appender that writes to
+   /// remote Syslog daemon listening a SocketAddr
    pub fn udp(host: SocketAddr) -> Syslog {
      let socket =
        match UdpSocket::bind(SocketAddr { ip: Ipv4Addr(0,0,0,0), port: 0 }) {
@@ -87,6 +92,9 @@ impl Syslog {
       }
   }
 
+  /// Factory for a Syslog appender that writes
+  /// to a host-local Syslog daemon listening on a unix socket domain
+  /// hosted at the given Path
   pub fn unix(path: Path) -> Syslog {
     let stream =
       match UnixStream::connect(&path) {
@@ -100,6 +108,8 @@ impl Syslog {
     }
   }
 
+  /// Returns a new Syslog appender, configured to append with
+  /// the provided tag
   pub fn tag(self, tag: &str) -> Syslog {
     Syslog {
       facility: self.facility,
@@ -108,17 +118,14 @@ impl Syslog {
     }
   }
 
+  /// Returns a new Syslog appender configured to append with
+  /// the provided Facility
   pub fn facility(self, facility: Facility) -> Syslog {
     Syslog {
       facility: facility,
       tag: self.tag,
       transport: self.transport
     }
-  }
-
-  fn log(&mut self, severity: Severity,  msg: &str) -> Result {
-    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), msg);
-    self.transport.send(&formatted)
   }
 
   pub fn debug(&mut self, msg: &str) -> Result {
@@ -151,6 +158,11 @@ impl Syslog {
 
   pub fn emergency(&mut self, msg: &str) -> Result {
     self.log(Severity::EMERGENCY, msg)
+  }
+
+  fn log(&mut self, severity: Severity,  msg: &str) -> Result {
+    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), msg);
+    self.transport.send(&formatted)
   }
 
   fn line(facility: Facility, severity: Severity, timestamp: Tm, msg: &str) -> String {
