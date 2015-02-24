@@ -2,6 +2,6 @@
 
 > syslog, srsly
 
-a syslog appender.
+a [syslog](https://tools.ietf.org/html/rfc5424) appender.
 
 Doug Tangren (softprops) 2015
