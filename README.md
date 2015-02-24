@@ -1,5 +1,7 @@
 # sysly
 
+[![Build Status](https://travis-ci.org/softprops/sysly.svg?branch=master)](https://travis-ci.org/softprops/sysly)
+
 > syslog, srsly
 
 a [syslog](https://tools.ietf.org/html/rfc5424) `udp` and `unix domain socket` appender.
