@@ -6,10 +6,13 @@ extern crate time;
 use std::old_io::IoError;
 use std::old_io::net::udp::UdpSocket;
 use std::old_io::net::ip::{ Ipv4Addr, SocketAddr };
+use std::result;
 use time::Tm;
 use std::old_io::net::pipe::UnixStream;
 
 // https://tools.ietf.org/html/rfc5424#section-6.2.1
+
+pub type Result = result::Result<(), IoError>;
 
 #[derive(Copy,Clone)]
 pub enum Facility {
@@ -19,10 +22,10 @@ pub enum Facility {
   DAEMON   = 3 << 3,
   AUTH     = 4 << 3,
   SYSLOG   = 5 << 3,
-  LPR      = 6 << 3,
+  LINEPTR  = 6 << 3,
   NEWS     = 7 << 3,
   UUCP     = 8 << 3,
-  CRON     = 9 << 3,
+  CLOCK    = 9 << 3,
   AUTHPRIV = 10 << 3,
   FTP      = 11 << 3,
   LOCAL0   = 16 << 3,
@@ -36,10 +39,10 @@ pub enum Facility {
 }
 
 pub enum Severity {
-  EMERG,
+  EMERGENCY,
   ALERT,
-  CRIT,
-  ERR,
+  CRITICAL,
+  ERROR,
   WARNING,
   NOTICE,
   INFO,
@@ -47,17 +50,17 @@ pub enum Severity {
 }
 
 trait Transport {
-  fn send(&mut self, line: &str) -> Result<(), IoError>;
+  fn send(&mut self, line: &str) -> Result;
 }
 
 impl Transport for (UdpSocket, SocketAddr) {
-  fn send(&mut self, line: &str) -> Result<(), IoError> {
+  fn send(&mut self, line: &str) -> Result {
     self.0.send_to(line.as_bytes(), self.1)
   }
 }
 
 impl Transport for UnixStream {
-  fn send(&mut self, line: &str) -> Result<(), IoError> {
+  fn send(&mut self, line: &str) -> Result {
     self.write_line(line)
   }
 }
@@ -113,17 +116,41 @@ impl Syslog {
     }
   }
 
-  fn log(&mut self, severity: Severity,  msg: &str) -> Result<(), IoError> {
+  fn log(&mut self, severity: Severity,  msg: &str) -> Result {
     let formatted = Syslog::line(self.facility.clone(), severity, time::now(), msg);
     self.transport.send(&formatted)
   }
 
-  pub fn debug(&mut self, msg: &str) -> Result<(), IoError> {
+  pub fn debug(&mut self, msg: &str) -> Result {
     self.log(Severity::DEBUG, msg)
   }
 
-  pub fn info(&mut self, msg: &str) -> Result<(), IoError> {
+  pub fn info(&mut self, msg: &str) -> Result {
     self.log(Severity::INFO, msg)
+  }
+
+  pub fn notice(&mut self, msg: &str) -> Result {
+    self.log(Severity::NOTICE, msg)
+  }
+
+  pub fn warn(&mut self, msg: &str) -> Result {
+    self.log(Severity::WARNING, msg)
+  }
+
+  pub fn err(&mut self, msg: &str) -> Result {
+    self.log(Severity::ERROR, msg)
+  }
+
+  pub fn critical(&mut self, msg: &str) -> Result {
+    self.log(Severity::CRITICAL, msg)
+  }
+
+  pub fn alert(&mut self, msg: &str) -> Result {
+    self.log(Severity::ALERT, msg)
+  }
+
+  pub fn emergency(&mut self, msg: &str) -> Result {
+    self.log(Severity::EMERGENCY, msg)
   }
 
   fn line(facility: Facility, severity: Severity, timestamp: Tm, msg: &str) -> String {
