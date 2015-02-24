@@ -1,7 +1,5 @@
 #![feature(old_io)]
 #![feature(old_path)]
-#![feature(box_syntax)]
-#![feature(box_patterns)]
 
 extern crate time;
 
@@ -13,8 +11,9 @@ use std::old_io::net::pipe::UnixStream;
 
 // https://tools.ietf.org/html/rfc5424#section-6.2.1
 
+#[derive(Copy,Clone)]
 pub enum Facility {
-  KERN     = 0 << 3,
+  KERN     = 0,
   USER     = 1 << 3,
   MAIL     = 2 << 3,
   DAEMON   = 3 << 3,
@@ -65,6 +64,8 @@ impl Transport for UnixStream {
 
 // a rust interface for syslog
 pub struct Syslog {
+  facility: Facility,
+  tag: Option<String>,
   transport: Box<Transport>
 }
 
@@ -77,7 +78,9 @@ impl Syslog {
        };
       let tup = (socket, host);
       Syslog {
-        transport: box tup
+        facility: Facility::USER,
+        tag: None,
+        transport: Box::new(tup)
       }
   }
 
@@ -88,25 +91,39 @@ impl Syslog {
         Ok(s)  => s
       };
     Syslog {
-       transport: box stream
+      facility: Facility::USER,
+      tag: None,
+      transport: Box::new(stream)
     }
   }
 
-  fn log(&mut self, facility: Facility, severity: Severity,  msg: &str) -> Result<(), IoError> {
-    let formatted = Syslog::line(facility, severity, time::now(), msg);
-    (*self.transport).send(&formatted)
+  pub fn tag(self, tag: &str) -> Syslog {
+    Syslog {
+      facility: self.facility,
+      tag: Some(tag.to_string()),
+      transport: self.transport
+    }
+  }
+
+  pub fn facility(self, facility: Facility) -> Syslog {
+    Syslog {
+      facility: facility,
+      tag: self.tag,
+      transport: self.transport
+    }
+  }
+
+  fn log(&mut self, severity: Severity,  msg: &str) -> Result<(), IoError> {
+    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), msg);
+    self.transport.send(&formatted)
   }
 
   pub fn debug(&mut self, msg: &str) -> Result<(), IoError> {
-     self.log(Facility::LOCAL3, Severity::DEBUG, msg)
+    self.log(Severity::DEBUG, msg)
   }
 
   pub fn info(&mut self, msg: &str) -> Result<(), IoError> {
-     self.log(Facility::LOCAL3, Severity::INFO, msg)
-  }
-
-  pub fn notice(&mut self, msg: &str) -> Result<(), IoError> {
-     self.log(Facility::LOCAL3, Severity::NOTICE, msg)
+    self.log(Severity::INFO, msg)
   }
 
   fn line(facility: Facility, severity: Severity, timestamp: Tm, msg: &str) -> String {
