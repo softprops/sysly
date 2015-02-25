@@ -22,7 +22,7 @@ use std::old_io::net::ip::{ Ipv4Addr, SocketAddr };
 
 fn main() {
   let host = SocketAddr { ip: Ipv4Addr(127,0,0,1), port: 514 };
-  let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).app("test");
+  let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).app("sysly");
   syslog.info("Hello syslog. I'm rust. Please to meet you");
 }
 ```
