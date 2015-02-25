@@ -77,7 +77,13 @@ pub struct Syslog {
   host: Option<String>,
   /// An optional app-name appended to Syslog messages as defined by 
   /// [rfc5424#section-6.2.5](https://tools.ietf.org/html/rfc5424#section-6.2.5)
-  app: Option<String>,  
+  app: Option<String>,
+  /// An optional proc-id appended to Syslog messages as defined by
+  /// [rfc5424#section-6.2.6](https://tools.ietf.org/html/rfc5424#section-6.2.6)
+  pid: Option<String>,
+  /// An optional msg-id appended to Syslog messages as defined by 
+  /// [rfc5424#section-6.2.7](https://tools.ietf.org/html/rfc5424#section-6.2.7)
+  msgid: Option<String>,
   transport: Box<Transport>
 }
 
@@ -95,6 +101,8 @@ impl Syslog {
         facility: Facility::USER,
         host: None,
         app: None,
+        pid: None,
+        msgid: None,
         transport: Box::new(tup)
       }
   }
@@ -117,6 +125,8 @@ impl Syslog {
       facility: Facility::USER,
       host: None,
       app: None,
+      pid: None,
+      msgid: None,
       transport: Box::new(stream)
     }
   }
@@ -127,6 +137,8 @@ impl Syslog {
       facility: facility,
       host: self.host,
       app: self.app,
+      pid: self.pid,
+      msgid: self.msgid,
       transport: self.transport
     }
   }
@@ -138,6 +150,8 @@ impl Syslog {
       facility: self.facility,
       host: Some(local.to_string()),
       app: self.app,
+      pid: self.pid,
+      msgid: self.msgid,
       transport: self.transport
     }
   }
@@ -149,6 +163,30 @@ impl Syslog {
       facility: self.facility,
       host: self.host,
       app: Some(app.to_string()),
+      pid: self.pid,
+      msgid: self.msgid,
+      transport: self.transport
+    }
+  }
+
+  pub fn pid(self, pid: &str) -> Syslog {
+    Syslog {
+      facility: self.facility,
+      host: self.host,
+      app: self.app,
+      pid: Some(pid.to_string()),
+      msgid: self.msgid,
+      transport: self.transport
+    }
+  }
+
+  pub fn msgid(self, id: &str) -> Syslog {
+    Syslog {
+      facility: self.facility,
+      host: self.host,
+      app: self.app,
+      pid: self.pid,
+      msgid: Some(id.to_string()),
       transport: self.transport
     }
   }
@@ -186,15 +224,21 @@ impl Syslog {
   }
 
   fn log(&mut self, severity: Severity,  msg: &str) -> Result {
-    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), self.host.clone(), self.app.clone(), msg);
+    let formatted = Syslog::line(
+        self.facility.clone(), severity, time::now(), self.host.clone(), self.app.clone(), self.pid.clone(), self.msgid.clone(), msg);
     self.transport.send(&formatted)
   }
 
-  fn line(facility: Facility, severity: Severity, timestamp: Tm, host: Option<String>, app: Option<String>, msg: &str) -> String {
+  fn line(facility: Facility, severity: Severity, timestamp: Tm, host: Option<String>, app: Option<String>, pid: Option<String>, msgid: Option<String>, msg: &str) -> String {
     format!(
-      "<{:?}> {} {} {} {}",
-        Syslog::priority(facility, severity), timestamp.rfc3339(),
-        host.unwrap_or(NIL.to_string()), app.unwrap_or(NIL.to_string()), msg)
+      "<{:?}>1 {} {} {} {} {} {}",
+        Syslog::priority(facility, severity),
+        timestamp.rfc3339(),
+        host.unwrap_or(NIL.to_string()),
+        app.unwrap_or(NIL.to_string()),
+        pid.unwrap_or(NIL.to_string()),
+        msgid.unwrap_or(NIL.to_string()),
+        msg)
   }
 
   // computes the priority of a message based on a facility and severity
@@ -211,8 +255,8 @@ mod tests {
   fn test_syslog_line_defaults() {
     let ts = time::now();
     assert_eq!(Syslog::line(
-      Facility::LOCAL0, Severity::INFO, ts, None, None, "yo"),
-      format!("<134> {} {} {} yo", ts.rfc3339(), NIL, NIL));
+      Facility::LOCAL0, Severity::INFO, ts, None, None, None, None, "yo"),
+      format!("<134>1 {} - - - - yo", ts.rfc3339()));
   }
 
   #[test]
@@ -220,8 +264,8 @@ mod tests {
     let ts = time::now();
     let host = "foo.local";
     assert_eq!(Syslog::line(
-      Facility::LOCAL0, Severity::INFO, ts, Some(host.to_string()), None, "yo"),
-      format!("<134> {} {} {} yo", ts.rfc3339(), host, NIL));
+      Facility::LOCAL0, Severity::INFO, ts, Some(host.to_string()), None, None, None, "yo"),
+      format!("<134>1 {} {} - - - yo", ts.rfc3339(), host));
   }
 
   #[test]
@@ -229,7 +273,7 @@ mod tests {
     let ts = time::now();
     let app = "sysly";
     assert_eq!(Syslog::line(
-      Facility::LOCAL0, Severity::INFO, ts, None, Some(app.to_string()), "yo"),
-      format!("<134> {} {} {} yo", ts.rfc3339(), NIL, app));
+      Facility::LOCAL0, Severity::INFO, ts, None, Some(app.to_string()), None, None, "yo"),
+      format!("<134>1 {} - {} - - yo", ts.rfc3339(), app));
   }
 }
