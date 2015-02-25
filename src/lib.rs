@@ -75,9 +75,9 @@ pub struct Syslog {
   /// A Syslog host entry as defined by
   /// [rfc5424#section-6.2.4](https://tools.ietf.org/html/rfc5424#section-6.2.4)
   host: Option<String>,
-  /// An optional tag append to Syslog messages as defined by 
+  /// An optional app-name appended to Syslog messages as defined by 
   /// [rfc5424#section-6.2.5](https://tools.ietf.org/html/rfc5424#section-6.2.5)
-  tag: Option<String>,  
+  app: Option<String>,  
   transport: Box<Transport>
 }
 
@@ -94,7 +94,7 @@ impl Syslog {
       Syslog {
         facility: Facility::USER,
         host: None,
-        tag: None,
+        app: None,
         transport: Box::new(tup)
       }
   }
@@ -116,7 +116,7 @@ impl Syslog {
     Syslog {
       facility: Facility::USER,
       host: None,
-      tag: None,
+      app: None,
       transport: Box::new(stream)
     }
   }
@@ -126,7 +126,7 @@ impl Syslog {
     Syslog {
       facility: facility,
       host: self.host,
-      tag: self.tag,
+      app: self.app,
       transport: self.transport
     }
   }
@@ -137,18 +137,18 @@ impl Syslog {
     Syslog {
       facility: self.facility,
       host: Some(local.to_string()),
-      tag: self.tag,
+      app: self.app,
       transport: self.transport
     }
   }
 
   /// Returns a new Syslog appender, configured to append with
-  /// the provided tag
-  pub fn tag(self, tag: &str) -> Syslog {
+  /// the provided app-name
+  pub fn app(self, app: &str) -> Syslog {
     Syslog {
       facility: self.facility,
       host: self.host,
-      tag: Some(tag.to_string()),
+      app: Some(app.to_string()),
       transport: self.transport
     }
   }
@@ -186,15 +186,15 @@ impl Syslog {
   }
 
   fn log(&mut self, severity: Severity,  msg: &str) -> Result {
-    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), self.host.clone(), self.tag.clone(), msg);
+    let formatted = Syslog::line(self.facility.clone(), severity, time::now(), self.host.clone(), self.app.clone(), msg);
     self.transport.send(&formatted)
   }
 
-  fn line(facility: Facility, severity: Severity, timestamp: Tm, host: Option<String>, tag: Option<String>, msg: &str) -> String {
+  fn line(facility: Facility, severity: Severity, timestamp: Tm, host: Option<String>, app: Option<String>, msg: &str) -> String {
     format!(
       "<{:?}> {} {} {} {}",
         Syslog::priority(facility, severity), timestamp.rfc3339(),
-        host.unwrap_or(NIL.to_string()), tag.unwrap_or(NIL.to_string()), msg)
+        host.unwrap_or(NIL.to_string()), app.unwrap_or(NIL.to_string()), msg)
   }
 
   // computes the priority of a message based on a facility and severity
@@ -225,7 +225,7 @@ mod tests {
   }
 
   #[test]
-  fn test_syslog_line_tag() {
+  fn test_syslog_line_app() {
     let ts = time::now();
     let app = "sysly";
     assert_eq!(Syslog::line(
