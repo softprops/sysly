@@ -72,9 +72,11 @@ impl Transport for UnixStream {
 pub struct Syslog {
   /// A Syslog facility to target when logging
   facility: Facility,
+  /// A Syslog host entry as defined by
+  /// [rfc5424#section-6.2.4](https://tools.ietf.org/html/rfc5424#section-6.2.4)
   host: Option<String>,
   /// An optional tag append to Syslog messages as defined by 
-  /// [rfc5424](https://tools.ietf.org/html/rfc5424#section-6.2.5)
+  /// [rfc5424#section-6.2.5](https://tools.ietf.org/html/rfc5424#section-6.2.5)
   tag: Option<String>,  
   transport: Box<Transport>
 }
@@ -123,7 +125,7 @@ impl Syslog {
   pub fn facility(self, facility: Facility) -> Syslog {
     Syslog {
       facility: facility,
-      host: None,
+      host: self.host,
       tag: self.tag,
       transport: self.transport
     }
@@ -145,7 +147,7 @@ impl Syslog {
   pub fn tag(self, tag: &str) -> Syslog {
     Syslog {
       facility: self.facility,
-      host: None,
+      host: self.host,
       tag: Some(tag.to_string()),
       transport: self.transport
     }
