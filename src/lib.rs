@@ -276,4 +276,22 @@ mod tests {
       Facility::LOCAL0, Severity::INFO, ts, None, Some(app.to_string()), None, None, "yo"),
       format!("<134>1 {} - {} - - yo", ts.rfc3339(), app));
   }
+
+  #[test]
+  fn test_syslog_line_pid() {
+    let ts = time::now();
+    let pid = "16";
+    assert_eq!(Syslog::line(
+      Facility::LOCAL0, Severity::INFO, ts, None, None, Some(pid.to_string()), None, "yo"),
+      format!("<134>1 {} - - {} - yo", ts.rfc3339(), pid));
+  }
+
+  #[test]
+  fn test_syslog_line_msgid() {
+    let ts = time::now();
+    let msgid = "TCPIN";
+    assert_eq!(Syslog::line(
+      Facility::LOCAL0, Severity::INFO, ts, None, None, None, Some(msgid.to_string()), "yo"),
+      format!("<134>1 {} - - - {} yo", ts.rfc3339(), msgid));
+  }
 }
