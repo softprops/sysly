@@ -3,6 +3,12 @@
 name = "sysly"
 version = "0.0.1"
 authors = ["softprops <d.tangren@gmail.com>"]
+description = "A modern syslog udp and unix domain socket appender."
+documentation = "https://github.com/softprops/#readme"
+homepage = "https://github.com/softprops/"
+repository = "https://github.com/softprops/"
+keywords = ["log", "logging", "syslog", "unix"]
+license = "MIT"
 
 [dependencies]
 time = "0.1.17"
