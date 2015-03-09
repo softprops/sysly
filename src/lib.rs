@@ -1,8 +1,10 @@
+#![feature(test)]
 #![feature(io)]
 #![feature(net)]
 
 #![feature(old_path)]
 
+extern crate test;
 extern crate time;
 extern crate unix_socket;
 
@@ -251,8 +253,10 @@ impl Syslog {
 
 #[cfg(test)]
 mod tests {
-  use super::{Syslog, Facility, NIL, Severity};
+  use super::{Syslog, Facility, Severity};
   use time;
+  use test::Bencher;
+
   #[test]
   fn test_syslog_line_defaults() {
     let ts = time::now();
@@ -295,5 +299,11 @@ mod tests {
     assert_eq!(Syslog::line(
       Facility::LOCAL0, Severity::INFO, ts, None, None, None, Some(msgid.to_string()), "yo"),
       format!("<134>1 {} - - - {} yo", ts.rfc3339(), msgid));
+  }
+
+  #[bench]
+  fn bench_assembly_line(b: &mut Bencher) {
+    b.iter(|| Syslog::line(
+      Facility::LOCAL0, Severity::INFO, time::now(), None, None, None, None, "yo"))
   }
 }
