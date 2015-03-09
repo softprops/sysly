@@ -4,6 +4,7 @@ extern crate sysly;
 use sysly::{ Facility, Syslog };
 use std::net::{ IpAddr, SocketAddr };
 
+#[cfg(not(test))]
 fn main() {
   let host = SocketAddr::new(IpAddr::new_v4(127,0,0,1), 514);
   let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).host("foo.local").app("test");
