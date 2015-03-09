@@ -6,6 +6,14 @@
 
 a [syslog](https://tools.ietf.org/html/rfc5424) `udp` and `unix domain socket` appender.
 
+## install
+
+Add the following to your `Cargo.toml`
+
+```toml
+[dependencies]
+sysly = "0.1.0"
+```
 
 ## usage
 
@@ -14,16 +22,19 @@ The interface is straight forward. First create a new `Syslog` instance optional
 `debug`, `info`, `notice`, `warn`, `err`, `critical`, `alert`, and `emergency`.
 
 ```rust
-#![feature(old_io)]
+#![feature(net)]
 extern crate sysly;
 
 use sysly::{ Facility, Syslog };
-use std::old_io::net::ip::{ Ipv4Addr, SocketAddr };
+use std::net::{ IpAddr, SocketAddr };
 
 fn main() {
-  let host = SocketAddr { ip: Ipv4Addr(127,0,0,1), port: 514 };
-  let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).app("sysly");
-  syslog.info("Hello syslog. I'm rust. Please to meet you");
+  let host = SocketAddr::new(IpAddr::new_v4(127,0,0,1), 514);
+  let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).host("foo.local").app("test");
+  match syslog.info("Hello syslog. I'm rust.") {
+    Err(e) => panic!("error sending -- {}", e),
+    Ok(_) => println!("sent")
+  };
 }
 ```
 

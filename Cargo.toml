@@ -1,9 +1,9 @@
 [package]
 
 name = "sysly"
-version = "0.0.2"
+version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
-description = "A modern syslog udp and unix domain socket appender."
+description = "A modern multi-transport syslog appender."
 documentation = "https://github.com/softprops/sysly#readme"
 homepage = "https://github.com/softprops/sysly"
 repository = "https://github.com/softprops/sysly"
@@ -11,4 +11,5 @@ keywords = ["log", "logging", "syslog", "unix"]
 license = "MIT"
 
 [dependencies]
-time = "0.1.17"
+unix_socket = "0.1.0"
+time = "0.1.19"

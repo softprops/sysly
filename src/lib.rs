@@ -1,17 +1,19 @@
-#![feature(old_io)]
+#![feature(io)]
+#![feature(net)]
+
 #![feature(old_path)]
 
 extern crate time;
+extern crate unix_socket;
 
-use std::old_io::IoError;
-use std::old_io::net::udp::UdpSocket;
-use std::old_io::net::ip::{ Ipv4Addr, SocketAddr };
+use std::io::{ Error, Write };
+use std::net::{ IpAddr, UdpSocket, SocketAddr };
 use std::result;
 use time::Tm;
-use std::old_io::net::pipe::UnixStream;
+use unix_socket::UnixStream;
 
-/// A type alias for `Result<(), IoError>`, the result of writing a log message
-pub type Result = result::Result<(), IoError>;
+/// A type alias for `Result<(), Error>`, the result of writing a log message
+pub type Result = result::Result<(), Error>;
 
 static NIL: &'static str = "-";
 
@@ -58,13 +60,13 @@ trait Transport {
 
 impl Transport for (UdpSocket, SocketAddr) {
   fn send(&mut self, line: &str) -> Result {
-    self.0.send_to(line.as_bytes(), self.1)
+    self.0.send_to(line.as_bytes(), &self.1).map(|_| ())
   }
 }
 
 impl Transport for UnixStream {
   fn send(&mut self, line: &str) -> Result {
-    self.write_line(line)
+    self.write_all(line.as_bytes())
   }
 }
 
@@ -92,7 +94,7 @@ impl Syslog {
    /// remote Syslog daemon listening a SocketAddr
    pub fn udp(host: SocketAddr) -> Syslog {
      let socket =
-       match UdpSocket::bind(SocketAddr { ip: Ipv4Addr(0,0,0,0), port: 0 }) {
+       match UdpSocket::bind("0.0.0.0:0") {
          Err(e) => panic!("error binding to local addr {}", e),
          Ok(s) => s
        };
@@ -109,7 +111,7 @@ impl Syslog {
 
   /// Same as udp with providing local loopback address with the standard syslog port
   pub fn localudp() -> Syslog {
-    Syslog::udp(SocketAddr { ip: Ipv4Addr(127,0,0,1), port: 514 })
+    Syslog::udp(SocketAddr::new(IpAddr::new_v4(127,0,0,1), 514))
   }
 
   /// Factory for a Syslog appender that writes
