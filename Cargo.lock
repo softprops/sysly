@@ -1,6 +1,6 @@
 [root]
 name = "sysly"
-version = "0.0.2"
+version = "0.1.0"
 dependencies = [
  "time 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "unix_socket 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
