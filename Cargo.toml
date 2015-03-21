@@ -9,6 +9,7 @@ homepage = "https://github.com/softprops/sysly"
 repository = "https://github.com/softprops/sysly"
 keywords = ["log", "logging", "syslog", "unix"]
 license = "MIT"
+exclude = ["src/main.rs"]
 
 [dependencies]
 unix_socket = "0.2.1"
