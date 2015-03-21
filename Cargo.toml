@@ -1,7 +1,7 @@
 [package]
 
 name = "sysly"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "A modern multi-transport syslog appender."
 documentation = "https://github.com/softprops/sysly#readme"
@@ -11,5 +11,5 @@ keywords = ["log", "logging", "syslog", "unix"]
 license = "MIT"
 
 [dependencies]
-unix_socket = "0.1.0"
-time = "0.1.19"
+unix_socket = "0.2.1"
+time = "0.1.20"
