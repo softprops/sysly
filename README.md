@@ -12,7 +12,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-sysly = "0.1.0"
+sysly = "0.2.0"
 ```
 
 ## usage
@@ -22,16 +22,16 @@ The interface is straight forward. First create a new `Syslog` instance optional
 `debug`, `info`, `notice`, `warn`, `err`, `critical`, `alert`, and `emergency`.
 
 ```rust
-#![feature(net)]
 extern crate sysly;
 
 use sysly::{ Facility, Syslog };
-use std::net::{ IpAddr, SocketAddr };
+use std::net::{ Ipv4Addr, SocketAddr, SocketAddrV4 };
 
+#[cfg(not(test))]
 fn main() {
-  let host = SocketAddr::new(IpAddr::new_v4(127,0,0,1), 514);
+  let host = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127,0,0,1), 514));
   let mut syslog = Syslog::udp(host).facility(Facility::LOCAL3).host("foo.local").app("test");
-  syslog.info("Hello syslog. I'm rust. Please to meet you")
+  syslog.info("Hello syslog. I'm rust. Pleased to meet you")
 }
 ```
 
