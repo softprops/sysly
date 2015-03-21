@@ -1,15 +1,12 @@
-#![feature(test)]
-#![feature(io)]
-#![feature(net)]
-
-#![feature(old_path)]
+#![feature(test, std_misc)]
 
 extern crate test;
 extern crate time;
 extern crate unix_socket;
 
 use std::io::{ Error, Write };
-use std::net::{ IpAddr, UdpSocket, SocketAddr };
+use std::net::{ Ipv4Addr, UdpSocket, SocketAddr, SocketAddrV4 };
+use std::path::AsPath;
 use std::result;
 use time::Tm;
 use unix_socket::UnixStream;
@@ -113,15 +110,15 @@ impl Syslog {
 
   /// Same as udp with providing local loopback address with the standard syslog port
   pub fn localudp() -> Syslog {
-    Syslog::udp(SocketAddr::new(IpAddr::new_v4(127,0,0,1), 514))
+    Syslog::udp(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127,0,0,1), 514)))
   }
 
   /// Factory for a Syslog appender that writes
   /// to a host-local Syslog daemon listening on a unix socket domain
   /// hosted at the given Path
-  pub fn unix(path: Path) -> Syslog {
+  pub fn unix<P: AsPath>(path: P) -> Syslog {
     let stream =
-      match UnixStream::connect(&path) {
+      match UnixStream::connect(path) {
         Err(_) => panic!("failed to connect to socket"),
         Ok(s)  => s
       };
