@@ -6,6 +6,10 @@
 
 a [syslog](https://tools.ietf.org/html/rfc5424) `udp` and `unix domain socket` appender.
 
+## docs
+
+Find them [here](http://softprops.github.io/sysly)
+
 ## install
 
 Add the following to your `Cargo.toml`
