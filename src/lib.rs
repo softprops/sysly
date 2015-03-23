@@ -1,5 +1,7 @@
 #![feature(test, std_misc)]
 
+//! sysly is a rust interface for [syslog](https://tools.ietf.org/html/rfc5424
+
 extern crate test;
 extern crate time;
 extern crate unix_socket;
@@ -11,12 +13,12 @@ use std::result;
 use time::Tm;
 use unix_socket::UnixStream;
 
-/// A type alias for `Result<(), Error>`, the result of writing a log message
+/// A type alias for `result::Result<(), std::io::Error>`, the result of writing a log message
 pub type Result = result::Result<(), Error>;
 
 static NIL: &'static str = "-";
 
-/// Syslog Facilites as defined by [rfc5424](https://tools.ietf.org/html/rfc5424#page-10)
+/// Syslog [Facilities](https://tools.ietf.org/html/rfc5424#page-10)
 #[derive(Copy,Clone)]
 pub enum Facility {
   KERN     = 0,
@@ -41,7 +43,7 @@ pub enum Facility {
   LOCAL7   = 23 << 3
 }
 
-/// Syslog Severity as defined by [rfc5424](https://tools.ietf.org/html/rfc5424#page-11)
+/// Syslog [Severities](https://tools.ietf.org/html/rfc5424#page-11)
 pub enum Severity {
   EMERGENCY,
   ALERT,
