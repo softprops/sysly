@@ -14,3 +14,7 @@ exclude = ["src/main.rs"]
 [dependencies]
 unix_socket = "0.2.1"
 time = "0.1.20"
+
+[[bin]]
+name = "sysly"
+doc = false
