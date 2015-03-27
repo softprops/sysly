@@ -1,4 +1,4 @@
-#![feature(test, std_misc)]
+#![feature(convert, test)]
 
 //! sysly is a rust interface for [syslog](https://tools.ietf.org/html/rfc5424
 
@@ -6,9 +6,10 @@ extern crate test;
 extern crate time;
 extern crate unix_socket;
 
+use std::convert::AsRef;
 use std::io::{ Error, Write };
 use std::net::{ Ipv4Addr, UdpSocket, SocketAddr, SocketAddrV4 };
-use std::path::AsPath;
+use std::path::Path;
 use std::result;
 use time::Tm;
 use unix_socket::UnixStream;
@@ -118,7 +119,7 @@ impl Syslog {
   /// Factory for a Syslog appender that writes
   /// to a host-local Syslog daemon listening on a unix socket domain
   /// hosted at the given Path
-  pub fn unix<P: AsPath>(path: P) -> Syslog {
+  pub fn unix<P: AsRef<Path>>(path: P) -> Syslog {
     let stream =
       match UnixStream::connect(path) {
         Err(_) => panic!("failed to connect to socket"),
