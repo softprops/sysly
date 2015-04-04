@@ -1,8 +1,10 @@
-#![feature(convert, test)]
+#![cfg_attr(test, feature(test))]
 
 //! sysly is a rust interface for [syslog](https://tools.ietf.org/html/rfc5424
 
+#[cfg(test)]
 extern crate test;
+
 extern crate time;
 extern crate unix_socket;
 
