@@ -1,62 +1,90 @@
-#![cfg_attr(test, feature(test))]
+#![deny(missing_docs)]
+//#![cfg_attr(test, deny(warnings))]
+#![cfg_attr(all(test, feature = "nightly"), feature(test))]
 
 //! sysly is a rust interface for [syslog](https://tools.ietf.org/html/rfc5424)
 
-#[cfg(test)]
-extern crate test;
-
+//  #[cfg(all(test, feature = "nightly"))]
+//  extern crate test;
 extern crate time;
 extern crate unix_socket;
 
 use std::convert::AsRef;
-use std::io::{ Error, Write };
+use std::io::{ self, Write };
 use std::net::{ Ipv4Addr, UdpSocket, SocketAddr, SocketAddrV4 };
 use std::path::Path;
-use std::result;
 use time::Tm;
 use unix_socket::UnixStream;
-
-/// A type alias for `result::Result<(), std::io::Error>`, the result of writing a log message
-pub type Result = result::Result<(), Error>;
 
 static NIL: &'static str = "-";
 
 /// Syslog [Facilities](https://tools.ietf.org/html/rfc5424#page-10)
 #[derive(Copy,Clone)]
 pub enum Facility {
+  /// kernal facility
   KERN     = 0,
+  /// user facility
   USER     = 1 << 3,
+  /// user facility
   MAIL     = 2 << 3,
+  /// daemon facility
   DAEMON   = 3 << 3,
+  /// auth facility
   AUTH     = 4 << 3,
+  /// syslog facility
   SYSLOG   = 5 << 3,
+  /// lineptr facility
   LINEPTR  = 6 << 3,
+  /// news facility
   NEWS     = 7 << 3,
+  /// uucp facility
   UUCP     = 8 << 3,
+  /// clock facility
   CLOCK    = 9 << 3,
+  /// auth facility
   AUTHPRIV = 10 << 3,
+  /// ftp facility
   FTP      = 11 << 3,
+  /// Local0 facility
   LOCAL0   = 16 << 3,
+  /// Local1 facility
   LOCAL1   = 17 << 3,
+  /// Local2 facility
   LOCAL2   = 18 << 3,
+  /// Local3 facility
   LOCAL3   = 19 << 3,
+  /// Local4 facility
   LOCAL4   = 20 << 3,
+  /// Local5 facility
   LOCAL5   = 21 << 3,
+  /// Local6 facility
   LOCAL6   = 22 << 3,
+  /// Local7 facility
   LOCAL7   = 23 << 3
 }
 
 /// Syslog [Severities](https://tools.ietf.org/html/rfc5424#page-11)
 pub enum Severity {
+  /// Emergency Severity
   EMERGENCY,
+  /// Alert Severity
   ALERT,
+  /// Critical Severity
   CRITICAL,
+  /// Error Severity
   ERROR,
+  /// Warning Severity
   WARNING,
+  /// Notice Severity
   NOTICE,
+  /// Info Severity
   INFO,
+  /// Debug Severity
   DEBUG
 }
+
+/// Result of log operations
+pub type Result = io::Result<()>;
 
 trait Transport {
   fn send(&mut self, line: &str) -> Result;
@@ -175,6 +203,8 @@ impl Syslog {
     }
   }
 
+  /// Returns a new Syslog appender configured to append with
+  /// the provided p(rocess)id
   pub fn pid(self, pid: &str) -> Syslog {
     Syslog {
       facility: self.facility,
@@ -186,6 +216,8 @@ impl Syslog {
     }
   }
 
+  /// Returns a new Syslog appender configured to append with
+  /// the provided msgid
   pub fn msgid(self, id: &str) -> Syslog {
     Syslog {
       facility: self.facility,
@@ -197,34 +229,42 @@ impl Syslog {
     }
   }
 
+  /// Emits a debug level message
   pub fn debug(&mut self, msg: &str) -> Result {
     self.log(Severity::DEBUG, msg)
   }
 
+  /// Emits an info level message
   pub fn info(&mut self, msg: &str) -> Result {
     self.log(Severity::INFO, msg)
   }
 
+  /// Emits an info level message
   pub fn notice(&mut self, msg: &str) -> Result {
     self.log(Severity::NOTICE, msg)
   }
 
+  /// Emits an warn level message
   pub fn warn(&mut self, msg: &str) -> Result {
     self.log(Severity::WARNING, msg)
   }
 
+  /// Emits an error level message
   pub fn err(&mut self, msg: &str) -> Result {
     self.log(Severity::ERROR, msg)
   }
 
+  /// Emits a critical level message
   pub fn critical(&mut self, msg: &str) -> Result {
     self.log(Severity::CRITICAL, msg)
   }
 
+  /// Emits an alert level message
   pub fn alert(&mut self, msg: &str) -> Result {
     self.log(Severity::ALERT, msg)
   }
 
+  /// Emits a emergencycritical level message
   pub fn emergency(&mut self, msg: &str) -> Result {
     self.log(Severity::EMERGENCY, msg)
   }
@@ -257,7 +297,7 @@ impl Syslog {
 mod tests {
   use super::{Syslog, Facility, Severity};
   use time;
-  use test::Bencher;
+  //use test::Bencher;
 
   #[test]
   fn test_syslog_line_defaults() {
@@ -303,9 +343,9 @@ mod tests {
       format!("<134>1 {} - - - {} yo", ts.rfc3339(), msgid));
   }
 
-  #[bench]
-  fn bench_assembly_line(b: &mut Bencher) {
-    b.iter(|| Syslog::line(
-      Facility::LOCAL0, Severity::INFO, time::now(), None, None, None, None, "yo"))
-  }
+  //#[bench]
+  //fn bench_assembly_line(b: &mut Bencher) {
+  // b.iter(|| Syslog::line(
+  //    Facility::LOCAL0, Severity::INFO, time::now(), None, None, None, None, "yo"))
+  //}
 }
