@@ -16,7 +16,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-sysly = "0.2.2"
+sysly = "0.2.3"
 ```
 
 ## usage
