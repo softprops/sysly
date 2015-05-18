@@ -4,6 +4,7 @@ matrix:
   include:
     - rust: nightly
     - rust: beta
+    - rust: stable
 script:
   - cargo build
   - cargo test
