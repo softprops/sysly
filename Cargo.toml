@@ -12,5 +12,5 @@ license = "MIT"
 exclude = ["src/main.rs"]
 
 [dependencies]
-unix_socket = "0.3.2"
+unix_socket = "0.4.0"
 time = "0.1.25"
