@@ -22,7 +22,7 @@ sysly = "0.2.4"
 ## usage
 
 The interface is straight forward. First create a new `Syslog` instance optionally configuring with a
-`Facility` and `tag`, then start logging messages with methods which correlate to severities including: 
+`Facility` and `tag`, then start logging messages with methods which correlate to severities including:
 `debug`, `info`, `notice`, `warn`, `err`, `critical`, `alert`, and `emergency`.
 
 ```rust
