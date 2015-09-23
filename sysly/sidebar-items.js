@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Facility","Syslog Facilities"],["Severity","Syslog Severities"]],"struct":[["Syslog","A rust interface for Syslog, a standard unix system logging service"]],"type":[["Result","Result of log operations"]]});
